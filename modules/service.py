@@ -3,9 +3,8 @@ Module for handling user registration services, including validation
 and database insertion.
 """
 
-from werkzeug.security import generate_password_hash
-
 from models import add_employee, add_user
+from werkzeug.security import generate_password_hash
 
 
 class UserData:

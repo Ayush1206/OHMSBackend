@@ -1,25 +1,27 @@
 {
     "workbench.colorTheme": "Default Dark Modern",
     "python.createEnvironment.trigger": "off",
-    "python.analysis.typeCheckingMode": "standard",
+    "python.analysis.typeCheckingMode": "off",
     "python.analysis.autoImportCompletions": true,
+    "diffEditor.ignoreTrimWhitespace": false,
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.organizeImports": "explicit"
+            "source.organizeImports": "explicit",
+            "source.fixAll": "explicit"
         },
     },
     "isort.args": [
         "--profile",
         "black"
     ],
+    "black-formatter.args": [
+        "--line-length=100" // Set your desired max line length for Black
+    ],
     // Pylint configuration
     "pylint.args": [
-        "--max-line-length=100",  // Set your desired max line length here
+        "--max-line-length=100", // Set your desired max line length here
         "--disable=C0114,C0115,C0116, W0719" // Disable some docstring warnings if you find them too verbose
     ],
-    "black-formatter.args": [
-        "--line-length=100"  // Set your desired max line length for Black
-    ]
 }

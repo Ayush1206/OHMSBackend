@@ -1,5 +1,12 @@
+#!/usr/bin/python3
+
 """
-Module for setting up logging utilities.
+This module sets up logging for the application, enabling logging to both the console and an optional log file.
+
+The logging configuration can be customized based on whether logging to a file is needed.
+By default, logs are sent to the console, but you can enable file logging by passing `log_to_file=True`.
+
+Additionally, the `Colours` class is provided to facilitate colored terminal output for different types of messages, such as headers, warnings, or errors.
 """
 
 import logging
@@ -51,3 +58,20 @@ logger = setup_logging()
 logger.info("Logging system initialized")
 logger.warning("This is a warning message")
 logger.error("This is an error message")
+
+
+class Colours:
+    """
+    A utility class for ANSI escape sequences to format text with colors and styles in the terminal.
+    """
+
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKRED = "\033[91m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"  # Resets color to default
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
