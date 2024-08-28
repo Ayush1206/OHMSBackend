@@ -14,7 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
-from utiities import logger
+from modules.utilities import logger
 
 Base = declarative_base()
 
@@ -61,9 +61,7 @@ class Employees(Base):
     __table_args__ = (UniqueConstraint("employee_id", name="uq_employee_id"),)
 
 
-def add_user(
-    username, email, hashed_password, role_id, first_name, last_name, middle_name=None
-):
+def add_user(username, email, hashed_password, role_id, first_name, last_name, middle_name=None):
     """
     Add a new user to the database.
 
