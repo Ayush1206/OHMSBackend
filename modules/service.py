@@ -3,8 +3,19 @@ Module for handling user registration services, including validation
 and database insertion.
 """
 
-from models import add_employee, add_user
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from werkzeug.security import generate_password_hash
+
+from modules.models import (
+    add_employee,
+    add_user,
+    create_db_session,
+    get_user_by_username,
+)
+from modules.utilities import logger
+
+secret_key = "7U6eFs99l5C4N3SOVyXEBGVurljlC6"
 
 
 class UserData:
@@ -32,13 +43,12 @@ def validate_user_data(user_data):
             user_data.password,
             user_data.role_id,
             user_data.first_name,
-            user_data.last_name,
         ]
     ):
         raise ValueError(
-            "All required fields (username, email, password, role_id, first_name, last_name) must be provided."
+            "All required fields (username, email, password, role_id, first_name) must be provided."
         )
-    if len(user_data.username) > 80:
+    if len(user_data.username) > 30:
         raise ValueError("Username cannot be longer than 80 characters.")
     if len(user_data.email) > 120:
         raise ValueError("Email cannot be longer than 120 characters.")
@@ -48,54 +58,108 @@ def validate_user_data(user_data):
         raise TypeError("Role ID must be an integer.")
 
 
-def register_user_service(
-    user_data,
-    middle_name=None,
-    blood_group=None,
-    gov_id=None,
-    verification_documents=None,
-):
+def decrypt_password(encrypted_password, secret_key):
+    """
+    Decrypt the encrypted password.
+
+    :param encrypted_password: A dictionary containing the 'iv' and 'content' from the frontend.
+    :param secret_key: The secret key used for encryption and decryption.
+    :return: The decrypted password as a string.
+    """
+    try:
+        iv = bytes.fromhex(encrypted_password["iv"])
+        content = bytes.fromhex(encrypted_password["content"])
+
+        cipher = Cipher(
+            algorithms.AES(secret_key.encode()), modes.CBC(iv), backend=default_backend()
+        )
+        decryptor = cipher.decryptor()
+
+        decrypted_password = decryptor.update(content) + decryptor.finalize()
+        return decrypted_password.decode("utf-8").rstrip("\x00")
+    except Exception as e:
+        logger.error(f"Failed to decrypt password: {e}")
+        raise ValueError("Decryption failed")
+
+
+def register_user_service(data):
     """
     Register a new user in the system.
 
-    :param user_data: An instance of UserData containing user information.
-    :param middle_name: The middle name of the user (optional).
-    :param blood_group: The blood group of the user (optional).
-    :param gov_id: The government ID of the user (optional).
-    :param verification_documents: The verification documents for the user (optional).
+    :param data: The user data dictionary from the API request.
     :return: A dictionary with the success status and message.
     """
+    user_data = UserData(
+        username=data["username"],
+        email=data["email"],
+        password=data["password"],  # Encrypted password
+        role_id=data["role_id"],
+        first_name=data["first_name"],
+        middle_name=data["middle_name"],
+        last_name=data["last_name"],
+    )
+
     try:
         # Validate user data
         validate_user_data(user_data)
 
-        # Hash the password
-        hashed_password = generate_password_hash(user_data.password, method="sha256")
+        # Decrypt the password
+        decrypted_password = decrypt_password(user_data.password, secret_key)
 
-        # Add user to the database
+        # Hash the password
+        hashed_password = generate_password_hash(decrypted_password, method="sha256")
+
+        # Create a session and add user to the database
+        session = create_db_session()
         user = add_user(
+            session,
             user_data.username,
             user_data.email,
             hashed_password,
             user_data.role_id,
             user_data.first_name,
             user_data.last_name,
-            middle_name,
+            middle_name=data.get("middle_name"),
         )
 
-        # Add employee-specific details
-        if user_data.role_id == 1:  # Assuming role_id 1 corresponds to an employee
-            add_employee(user.id, blood_group, gov_id, verification_documents)
+        # Add employee-specific details if role_id is 1 (employee role)
+        if user_data.role_id == 1:
+            add_employee(
+                session,
+                user.id,
+                data.get("blood_group"),
+                data.get("gov_id"),
+                data.get("verification_documents"),
+            )
 
-        return {"success": True}
+        return {"success": True, "message": "User registered successfully"}
 
     except (ValueError, TypeError) as exc:
-        return {
-            "success": False,
-            "message": f"Validation error occurred: {exc}",
-        }
-    except Exception as exc:  # pylint: disable=broad-except
-        return {
-            "success": False,
-            "message": f"An unexpected error occurred: {exc}",
-        }
+        logger.error(f"Validation error occurred: {exc}")
+        return {"success": False, "message": f"Validation error: {exc}"}
+    except Exception as exc:
+        logger.error(f"An unexpected error occurred: {exc}")
+        return {"success": False, "message": f"An unexpected error occurred: {exc}"}
+
+
+def login_user_service(data):
+    """
+    Handle user login and generate a JWT token.
+
+    :param data: The user data dictionary from the API request.
+    :return: A dictionary with the success status, message, and token.
+    """
+    try:
+        session = create_db_session()
+        user = get_user_by_username(session, data["username"])
+
+        if not user or not user.check_password(data["password"]):
+            logger.error("Invalid credentials provided.")
+            return {"success": False, "message": "Invalid credentials"}
+
+        token = user.generate_token(secret_key="your_secret_key")  # Adjust to use config secret key
+        return {"success": True, "message": "Login successful", "token": token}
+
+    except Exception as exc:
+        logger.error(f"An unexpected error occurred during login: {exc}")
+        return {"success": False, "message": f"An unexpected error occurred: {exc}"}
