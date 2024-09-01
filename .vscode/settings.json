@@ -22,6 +22,6 @@
     // Pylint configuration
     "pylint.args": [
         "--max-line-length=100", // Set your desired max line length here
-        "--disable=C0114,C0115,C0116, W0719" // Disable some docstring warnings if you find them too verbose
+        "--disable=C0114,C0115,C0116, W0719, W0718" // Disable some docstring warnings if you find them too verbose
     ],
 }

@@ -44,14 +44,18 @@ def setup_logging(
             os.path.join("logs", log_file), maxBytes=max_bytes, backupCount=backup_count
         )
         file_handler.setFormatter(
-            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+            logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - line %(lineno)d - %(message)s"
+            )
         )
         logger.addHandler(file_handler)
 
     # Create a console handler
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(
-        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - line %(lineno)d - %(message)s"
+        )
     )
     logger.addHandler(console_handler)
 
@@ -61,10 +65,10 @@ def setup_logging(
 # Example usage
 logger = setup_logging()
 
-# Example of logging messages
-logger.info("Logging system initialized")
-logger.warning("This is a warning message")
-logger.error("This is an error message")
+# # Example of logging messages
+# logger.info("Logging system initialized")
+# logger.warning("This is a warning message")
+# logger.error("This is an error message")
 
 
 class Colours:

@@ -19,12 +19,13 @@ secret_key = "7U6eFs99l5C4N3SOVyXEBGVurljlC6"
 
 
 class UserData:
-    def __init__(self, username, email, password, role_id, first_name, last_name):
+    def __init__(self, username, email, password, role_id, first_name, middle_name, last_name):
         self.username = username
         self.email = email
         self.password = password
         self.role_id = role_id
         self.first_name = first_name
+        self.middle_name = middle_name
         self.last_name = last_name
 
 

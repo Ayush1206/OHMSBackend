@@ -32,7 +32,7 @@ def token_required(f):
             logger.warning("Token has expired.")
             return jsonify({"message": "Token has expired!"}), 403
         except Exception as exc:
-            logger.error(f"Token is invalid: {exc}")
+            logger.error("Token is invalid: %s", exc)
             return jsonify({"message": f"Token is invalid: {exc}"}), 403
 
         return f(current_user, *args, **kwargs)
@@ -48,9 +48,11 @@ def validate_request_data(data, required_fields):
     :param required_fields: A list of required fields to check.
     :return: A dictionary with the validation result and message.
     """
+    logger.info(required_fields)
+    logger.info(data)
     missing_fields = [field for field in required_fields if field not in data]
     if missing_fields:
-        logger.warning(f"Missing required fields: {missing_fields}")
+        logger.warning("Missing required fields: %s", missing_fields)
         return {
             "success": False,
             "message": f"Missing required fields: {', '.join(missing_fields)}",
